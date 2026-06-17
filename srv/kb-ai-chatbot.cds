@@ -1,3 +1,3 @@
-service ChatbotService @(path: 'master-data') {
+service ChatbotService @(path: 'kb-ai-chatbot') {
 
-}git
+}
