@@ -1,6 +1,91 @@
 <mvc:View controllerName="com.takeda.kbaipoc.controller.DataSource"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
-    <Page id="page" title="{i18n>title}">
-    </Page>
+    displayBlock="true"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core"
+    xmlns:smartTable="sap.ui.comp.smarttable"
+    xmlns:table="sap.ui.table"
+    xmlns:rowModes="sap.ui.table.rowmodes"
+    xmlns:u="sap.ui.unified">
+
+    <f:DynamicPage id="dataSourceDynamicPageId">
+        <f:title>
+            <f:DynamicPageTitle id="dataSourcePageTitleId">
+                <f:heading>
+                    <Title id="dataSourceTitleId" text="{i18n>title}"/>
+                </f:heading>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:header>
+            <f:DynamicPageHeader id="dataSourceHeaderId" pinnable="true">
+                <f:content>
+                    <VBox id="dataSourceUploadWrapperId" width="auto">
+                        <Label 
+                            id="dataSourceUploadLabelId" 
+                            text="{i18n>dataSource.uploadLabel}"/>
+
+                        <HBox id="dataSourceUploadVBoxId" width="auto">
+                            <u:FileUploader
+                                id="fileUploader"
+                                name="myFileUpload"
+                                uploadUrl="upload/"
+                                tooltip="{i18n>dataSource.uploadTooltip}"
+                                uploadComplete=".handleUploadComplete"
+                                class="sapUiSmallMarginEnd"/>
+
+                            <Button
+                                id="uploadButtonId"
+                                text="{i18n>dataSource.uploadButton}"
+                                press=".handleUploadPress"
+                                class="sapUiSmallMarginBegin"/>
+                        </HBox>
+                    </VBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <f:content>
+            <smartTable:SmartTable id="idDataSourceSmartTable" entitySet="DataSourceSet" placeToolbarInTable="true" tableType="ResponsiveTable" enableAutoBinding="false" useTablePersonalisation="true" useVariantManagement="false" enableCopy="false" enableExport="true" showFullScreenButton="true">
+                <smartTable:customToolbar>
+                    <OverflowToolbar id="idDataSourceOverflowToolbar" style="Clear">
+                        <Title id="idDataSourceTableTitle" text="{i18n>dataSource.tableTitle}" />
+                        <ToolbarSpacer id="idToolbarSpacer"/>
+                        <Button
+                            id="idDeleteFilesBtn"
+                            text="{i18n>dataSource.table.deleteFiles}"
+                            type="Emphasized"
+                            press="onDeleteFiles"/>
+                    </OverflowToolbar>
+                </smartTable:customToolbar>
+
+                <Table id="idDataSourceTable" inset="false" growing="true" growingScrollToLoad="true" growingThreshold="20" mode="None" fixedLayout="true" autoPopinMode="true" sticky="ColumnHeaders" updateFinished=".onUpdateFinished">
+                    <columns>
+                        <Column id="dataSourceColFileName" width="auto">
+                            <header>
+                                <Label id="dataSourceColFileNameLabel" text="{i18n>dataSource.table.fileName}" />
+                            </header>
+                        </Column>
+                        <Column id="dataSourceColUploadDate" width="auto">
+                            <header>
+                                <Label id="dataSourceColUploadDateLabel" text="{i18n>dataSource.table.uploadedOn}" />
+                            </header>
+                        </Column>
+                        <Column id="dataSourceColUploadedBy" width="auto">
+                            <header>
+                                <Label id="dataSourceColUploadedByLabel" text="{i18n>dataSource.table.uploadedBy}" />
+                            </header>
+                        </Column>
+                        <Column id="dataSourceColStatus" width="auto">
+                            <header>
+                                <Label id="dataSourceColStatusLabel" text="{i18n>dataSource.table.status}" />
+                            </header>
+                        </Column>
+                    </columns>
+                </Table>
+            </smartTable:SmartTable>
+        </f:content>
+    </f:DynamicPage>
+
 </mvc:View>
