@@ -10,13 +10,15 @@
     "@cap-js/sqlite": "^2.4",
     "@sap/cds-dk": "^9",
     "rimraf": "^5.0.5",
-    "mbt": "^1.2.49"
+    "mbt": "^1.2.49",
+    "cds-plugin-ui5": "^0.17.0"
   },
   "scripts": {
     "start": "cds-serve",
     "undeploy": "cf undeploy KB_AI_POC --delete-services --delete-service-keys --delete-service-brokers",
     "build": "rimraf resources mta_archives && mbt build --mtar archive",
-    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1",
+    "watch-kb_ai_poc_chatbot": "cds watch --open com.takeda.kbaipocchatbot/index.html?sap-ui-xx-viewCache=false --livereload false"
   },
   "private": true,
   "cds": {
@@ -29,5 +31,8 @@
       "html5-repo": true,
       "application-logging": true
     }
-  }
+  },
+  "workspaces": [
+    "app/*"
+  ]
 }
