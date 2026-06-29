@@ -1,0 +1,260 @@
+<mvc:View
+    controllerName="com.takeda.kbaipocchatbot.controller.Chatbot"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    height="100%"
+    displayBlock="true">
+
+    <Page
+        id="chatbotPageId"
+        showHeader="false"
+        enableScrolling="false">
+
+        <content>
+            <HBox
+                id="mainLayoutHBoxId"
+                width="100%"
+                height="100%"
+                renderType="Bare"
+                fitContainer="true">
+
+                <!-- LEFT SIDEBAR -->
+                <VBox
+                    id="chatHistoryVBoxId"
+                    width="28%"
+                    height="100%"
+                    class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd">
+
+                    <Button
+                        id="newChatButtonId"
+                        text="{i18n>newChatButtonText}"
+                        type="Emphasized"
+                        width="100%"
+                        class="sapUiTinyMarginBottom"
+                        press=".onNewChat"/>
+
+                    <Title
+                        id="chatHistoryTitleId"
+                        text="{i18n>chatHistoryTitle}"
+                        level="H5"
+                        class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+
+                    <List
+                        id="chatHistoryListId"
+                        mode="SingleSelectMaster"
+                        includeItemInSelection="true"
+                        width="100%"
+                        selectionChange=".onChatHistorySelect"
+                        items="{
+                            path: 'chat>/chatHistory',
+                            templateShareable: false
+                        }">
+
+                        <items>
+                            <StandardListItem
+                                id="chatHistoryStandardListItemId"
+                                title="{chat>title}"
+                                description="{chat>description}"
+                                selected="{= ${chat>key} === ${chat>/selectedChatKey} }"/>
+                        </items>
+                    </List>
+                </VBox>
+
+                <!-- RIGHT MAIN CONTENT -->
+                <VBox
+                    id="chatRightPaneVBoxId"
+                    width="72%"
+                    height="100%"
+                    fitContainer="true"
+                    renderType="Bare"
+                    class="sapUiSmallMargin">
+
+                    <!-- FIXED HEADER -->
+                    <Panel
+                        id="chatHeaderPanelId"
+                        expandable="false"
+                        expanded="true"
+                        class="sapUiNoContentPadding sapUiSmallMarginBottom">
+
+                        <content>
+                            <VBox
+                                id="chatHeaderVBoxId"
+                                class="sapUiSmallMargin">
+
+                                <Title
+                                    id="chatTitleId"
+                                    text="{chat>/title}"
+                                    level="H2"
+                                    class="sapUiTinyMarginBottom"/>
+
+                                <HBox
+                                    id="chatHeaderContentActionsHBoxId"
+                                    width="100%"
+                                    alignItems="Center"
+                                    justifyContent="SpaceBetween"
+                                    renderType="Bare"
+                                    wrap="Wrap">
+
+                                    <HBox
+                                        id="chatMetadataHBoxId"
+                                        alignItems="Center"
+                                        renderType="Bare"
+                                        wrap="Wrap">
+
+                                        <Text
+                                            id="dataSourceLabelTextId"
+                                            text="{i18n>dataSourceLabel}"
+                                            class="sapUiTinyMarginEnd"/>
+
+                                        <Text
+                                            id="dataSourceTextId"
+                                            text="{chat>/dataSource}"
+                                            class="sapUiMediumMarginEnd"/>
+
+                                        <Text
+                                            id="aiModelLabelTextId"
+                                            text="{i18n>aiModelLabel}"
+                                            class="sapUiTinyMarginEnd"/>
+
+                                        <Text
+                                            id="aiModelTextId"
+                                            text="{chat>/aiModel}"/>
+
+                                    </HBox>
+
+                                    <Button
+                                        id="editButtonId"
+                                        text="{i18n>editButtonText}"
+                                        type="Emphasized"/>
+
+                                </HBox>
+
+                            </VBox>
+                        </content>
+
+                        <layoutData>
+                            <FlexItemData
+                                id="chatHeaderFlexItemDataId"
+                                growFactor="0"
+                                shrinkFactor="0"/>
+                        </layoutData>
+
+                    </Panel>
+
+                    <!-- SCROLLABLE CONVERSATION AREA -->
+                    <ScrollContainer
+                        id="conversationScrollContainerId"
+                        width="100%"
+                        vertical="true"
+                        horizontal="false"
+                        focusable="false"
+                        class="sapUiTinyMarginBottom">
+
+                        <layoutData>
+                            <FlexItemData
+                                id="conversationScrollFlexItemDataId"
+                                growFactor="1"
+                                shrinkFactor="1"/>
+                        </layoutData>
+
+                        <List
+                            id="conversationListId"
+                            width="100%"
+                            inset="false"
+                            showSeparators="None"
+                            backgroundDesign="Transparent"
+                            noDataText="{i18n>conversationNoDataText}"
+                            items="{
+                                path: 'chat>/messages',
+                                templateShareable: false
+                            }">
+
+                            <items>
+                                <CustomListItem id="conversationCustomListItemId">
+                                    <Panel
+                                        id="conversationMessagePanelId"
+                                        expandable="false"
+                                        expanded="true"
+                                        class="sapUiNoContentPadding sapUiResponsiveMargin sapUiTinyMarginBottom">
+
+                                        <content>
+                                            <VBox
+                                                id="conversationMessageVBoxId"
+                                                class="sapUiSmallMargin">
+
+                                                <!-- MESSAGE INDICATOR -->
+                                                <HBox
+                                                    id="messageIndicatorHBoxId"
+                                                    alignItems="Center"
+                                                    renderType="Bare"
+                                                    class="sapUiTinyMarginBottom">
+                                                    
+                                                    <core:Icon
+                                                        id="messageRoleIconId"
+                                                        src="{= ${chat>role} === 'user' ? 'sap-icon://person-placeholder' : 'sap-icon://discussion-2' }"
+                                                        size="1rem"
+                                                        class="sapUiTinyMarginEnd"/>
+
+                                                    <Text
+                                                        id="messageRoleTextId"
+                                                        text="{= ${chat>role} === 'user' ? ${i18n>userMessageRoleLabel} : ${i18n>assistantMessageRoleLabel} }"
+                                                        class="sapUiTinyMarginEnd"/>
+
+                                                    <Text
+                                                        id="messageTimestampTextId"
+                                                        text="{chat>timestamp}"/>
+
+                                                </HBox>
+
+                                                <!-- USER MESSAGE -->
+                                                <Text
+                                                    id="userMessageTextId"
+                                                    visible="{= ${chat>role} === 'user' }"
+                                                    text="{chat>text}"
+                                                    wrapping="true"/>
+
+                                                <!-- AI MESSAGE -->
+                                                <FormattedText
+                                                    id="assistantMessageFormattedTextId"
+                                                    visible="{= ${chat>role} === 'assistant' }"
+                                                    htmlText="{chat>htmlText}"/>
+
+                                            </VBox>
+                                        </content>
+                                    </Panel>
+                                </CustomListItem>
+                            </items>
+
+                        </List>
+                    </ScrollContainer>
+
+                    <!-- FIXED INPUT AREA -->
+                    <VBox
+                        id="chatInputVBoxId"
+                        renderType="Bare">
+
+                        <layoutData>
+                            <FlexItemData
+                                id="chatInputFlexItemDataId"
+                                growFactor="0"
+                                shrinkFactor="0"/>
+                        </layoutData>
+
+                        <FeedInput
+                            id="chatFeedInputId"
+                            post=".onPost"
+                            rows="2"
+                            showIcon="false"
+                            placeholder="{i18n>chatInputPlaceholder}"
+                            class="sapUiSmallMarginBottom"/>
+
+                    </VBox>
+
+                </VBox>
+
+            </HBox>
+        </content>
+
+    </Page>
+</mvc:View>

@@ -67,9 +67,23 @@ modules:
       - comtakedakbaipoc.zip
       name: comtakedakbaipoc
       target-path: app/
+    - artifacts:
+      - comtakedakbaipocchatbot.zip
+      name: comtakedakbaipocchatbot
+      target-path: app/
 - name: comtakedakbaipoc
   type: html5
   path: kb_ai_poc
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: comtakedakbaipocchatbot
+  type: html5
+  path: app/kb_ai_poc_chatbot
   build-parameters:
     build-result: dist
     builder: custom
