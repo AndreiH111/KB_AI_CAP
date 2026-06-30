@@ -73,7 +73,7 @@ modules:
       target-path: app/
 - name: comtakedakbaipoc
   type: html5
-  path: kb_ai_poc
+  path: app/kb_ai_poc
   build-parameters:
     build-result: dist
     builder: custom
