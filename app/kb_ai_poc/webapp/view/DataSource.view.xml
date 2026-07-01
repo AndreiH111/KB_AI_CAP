@@ -56,11 +56,12 @@
                             id="idDeleteFilesBtn"
                             text="{i18n>dataSource.table.deleteFiles}"
                             type="Emphasized"
+                            enabled="false"
                             press="onDeleteFiles"/>
                     </OverflowToolbar>
                 </smartTable:customToolbar>
 
-                <Table id="idDataSourceTable" inset="false" growing="true" growingScrollToLoad="true" growingThreshold="20" mode="None" fixedLayout="true" autoPopinMode="true" sticky="ColumnHeaders" updateFinished=".onUpdateFinished">
+                <Table id="idDataSourceTable" inset="false" growing="true" growingScrollToLoad="true" growingThreshold="20" mode="MultiSelect" fixedLayout="true" autoPopinMode="true" selectionChange=".onSelectionChange" sticky="ColumnHeaders" updateFinished=".onUpdateFinished">
                     <columns>
                         <Column id="dataSourceColFileName" width="auto">
                             <header>

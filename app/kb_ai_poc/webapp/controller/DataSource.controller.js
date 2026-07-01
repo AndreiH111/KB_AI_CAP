@@ -63,8 +63,48 @@ sap.ui.define([
         },
         
         onUpdateFinished(oEvent) {
-        const iCount = oEvent.getSource().getItems().length;
-        this._updateTableTitle(iCount);
+            const iCount = oEvent.getSource().getItems().length;
+            this._updateTableTitle(iCount);
+        },
+
+        onSelectionChange(oEvent) {
+            const oTable = oEvent.getSource();
+            const bHasSelection = oTable.getSelectedItems().length > 0;
+
+            this.byId("idDeleteFilesBtn").setEnabled(bHasSelection);
+        },
+
+        onDeleteFiles() {
+            const oTable = this.byId("idDataSourceTable");
+            const aSelectedItems = oTable.getSelectedItems();
+
+            if (!aSelectedItems.length) {
+                sap.m.MessageToast.show("Please select at least one file.");
+                return;
+            }
+
+            const oModel = this.getView().getModel();
+            const aData = oModel.getProperty("/DataSourceSet");
+
+            aSelectedItems.forEach((oItem) => {
+                const oContext = oItem.getBindingContext();
+                const oSelectedData = oContext.getObject();
+
+                const iIndex = aData.findIndex(
+                    oEntry => oEntry.fileName === oSelectedData.fileName
+                );
+
+                if (iIndex > -1) {
+                aData.splice(iIndex, 1);
+                }
+            });
+
+            oModel.setProperty("/DataSourceSet", aData);
+            oTable.removeSelections(true);
+
+            oTable.removeSelections(true);
+            this.byId("idDeleteFilesBtn").setEnabled(false);
+
         }
 
     });
