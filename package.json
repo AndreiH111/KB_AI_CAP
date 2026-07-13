@@ -2,16 +2,18 @@
   "name": "KB_AI_POC",
   "version": "1.0.0",
   "dependencies": {
-    "@cap-js/hana": "^2",
-    "@sap/cds": "^9",
-    "@sap/xssec": "^4"
+    "@cap-js/hana": "2.8.0",
+    "@sap-cloud-sdk/connectivity": "^4.7.0",
+    "@sap-cloud-sdk/http-client": "^4.7.0",
+    "@sap/cds": "^10.0.3",
+    "@sap/xssec": "^4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@cap-js/sqlite": "^2.4",
-    "@sap/cds-dk": "^9",
-    "rimraf": "^5.0.5",
+    "@cap-js/sqlite": "^2.4.0",
+    "@sap/cds-dk": "^10.0.3",
     "mbt": "^1.2.49",
-    "cds-plugin-ui5": "^0.17.0"
+    "rimraf": "^5.0.5"
   },
   "scripts": {
     "start": "cds-serve",
@@ -26,7 +28,18 @@
       "[production]": {
         "auth": "xsuaa"
       },
-      "connectivity": true,
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "db.sqlite"
+        }
+      },
+      "KB_AI_CHATBOT": {
+        "kind": "odata",
+        "credentials": {
+          "destination": "KB_AI_POC"
+        }
+      },
       "destinations": true,
       "html5-repo": true,
       "application-logging": true
