@@ -4,9 +4,6 @@
     xmlns="sap.m"
     xmlns:f="sap.f"
     xmlns:core="sap.ui.core"
-    xmlns:smartTable="sap.ui.comp.smarttable"
-    xmlns:table="sap.ui.table"
-    xmlns:rowModes="sap.ui.table.rowmodes"
     xmlns:u="sap.ui.unified">
 
     <f:DynamicPage id="dataSourceDynamicPageId">
@@ -30,9 +27,8 @@
                             <u:FileUploader
                                 id="fileUploader"
                                 name="myFileUpload"
-                                uploadUrl="upload/"
                                 tooltip="{i18n>dataSource.uploadTooltip}"
-                                uploadComplete=".handleUploadComplete"
+                                sameFilenameAllowed="false"
                                 class="sapUiSmallMarginEnd"/>
 
                             <Button
@@ -47,21 +43,30 @@
         </f:header>
 
         <f:content>
-            <smartTable:SmartTable id="idDataSourceSmartTable" entitySet="DataSourceSet" placeToolbarInTable="true" tableType="ResponsiveTable" enableAutoBinding="false" useTablePersonalisation="true" useVariantManagement="false" enableCopy="false" enableExport="true" showFullScreenButton="true">
-                <smartTable:customToolbar>
-                    <OverflowToolbar id="idDataSourceOverflowToolbar" style="Clear">
-                        <Title id="idDataSourceTableTitle" text="{i18n>dataSource.tableTitle}" />
-                        <ToolbarSpacer id="idToolbarSpacer"/>
-                        <Button
-                            id="idDeleteFilesBtn"
-                            text="{i18n>dataSource.table.deleteFiles}"
-                            type="Emphasized"
-                            enabled="false"
-                            press="onDeleteFiles"/>
-                    </OverflowToolbar>
-                </smartTable:customToolbar>
+            <VBox id="idDataSourceTableWrapper">
+                <OverflowToolbar id="idDataSourceOverflowToolbar" style="Clear">
+                    <Title id="idDataSourceTableTitle" text="{i18n>dataSource.tableTitle}" />
+                    <ToolbarSpacer id="idToolbarSpacer"/>
+                    <Button
+                        id="idDeleteFilesBtn"
+                        text="{i18n>dataSource.table.deleteFiles}"
+                        type="Emphasized"
+                        enabled="false"
+                        press=".onDeleteFiles"/>
+                </OverflowToolbar>
 
-                <Table id="idDataSourceTable" inset="false" growing="true" growingScrollToLoad="true" growingThreshold="20" mode="MultiSelect" fixedLayout="true" autoPopinMode="true" selectionChange=".onSelectionChange" sticky="ColumnHeaders" updateFinished=".onUpdateFinished">
+                <Table
+                    id="idDataSourceTable"
+                    inset="false"
+                    growing="true"
+                    growingScrollToLoad="true"
+                    growingThreshold="20"
+                    mode="MultiSelect"
+                    fixedLayout="true"
+                    autoPopinMode="true"
+                    selectionChange=".onSelectionChange"
+                    sticky="ColumnHeaders"
+                    updateFinished=".onUpdateFinished">
                     <columns>
                         <Column id="dataSourceColFileName" width="auto">
                             <header>
@@ -85,7 +90,7 @@
                         </Column>
                     </columns>
                 </Table>
-            </smartTable:SmartTable>
+            </VBox>
         </f:content>
     </f:DynamicPage>
 
