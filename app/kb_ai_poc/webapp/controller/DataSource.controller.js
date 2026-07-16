@@ -69,37 +69,65 @@ sap.ui.define([
             this.byId("idDeleteFilesBtn").setEnabled(bHasSelection);
         },
 
-        onDeleteFiles() {
+        onDeleteFiles: function () {
             const oTable = this.byId("idDataSourceTable");
             const aSelectedItems = oTable.getSelectedItems();
-
-            if (!aSelectedItems.length) {
-                MessageToast.show("Please select at least one file.");
-                return;
-            }
-
-            const oModel = this.getView().getModel();
-            const aData = oModel.getProperty("/DataSourceSet");
-
-            aSelectedItems.forEach((oItem) => {
-                const oContext = oItem.getBindingContext();
-                const oSelectedData = oContext.getObject();
-
-                const iIndex = aData.findIndex(
-                    oEntry => oEntry.fileName === oSelectedData.fileName
-                );
-
-                if (iIndex > -1) {
-                aData.splice(iIndex, 1);
+            const oBundle = this.getView().getModel("i18n").getResourceBundle();
+            
+            MessageBox.confirm(oBundle.getText("dataSource.delete.confirm"),
+            {
+                actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+                emphasizedAction: MessageBox.Action.OK,
+                
+                onClose: (sAction) => {
+                    if (sAction !== MessageBox.Action.OK) {
+                        return;
+                    }
+                    
+                    const aFileNames = aSelectedItems.map((oItem) =>
+                        oItem.getBindingContext("files").getObject().fileName
+                    );
+                    fetch("/odata/v4/kb-ai-chatbot/deleteFile", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            filenames: aFileNames
+                                })
+                            })
+                            .then((oResponse) =>
+                                oResponse.json().then((oResult) => ({
+                                    ok: oResponse.ok,
+                                    result: oResult
+                                }))
+                            )
+                        .then(({ ok, result }) => {
+                            if (!ok || result.statusCode >= 400) {
+                                throw new Error(
+                                    result?.message ||
+                                    oBundle.getText("dataSource.delete.error")
+                                );
+                            }
+                    
+                            MessageToast.show(oBundle.getText("dataSource.delete.success"));
+                    
+                            oTable.removeSelections(true);
+                            this.byId("idDeleteFilesBtn").setEnabled(false);
+                    
+                            this._loadFiles();
+                        })
+                        .catch((oError) => {
+                            console.error("Delete Error:", oError);
+                    
+                            MessageBox.error(
+                                oError.message ||
+                                oBundle.getText("dataSource.delete.error")
+                            );
+                        });
+                    }
                 }
-            });
-
-            oModel.setProperty("/DataSourceSet", aData);
-            oTable.removeSelections(true);
-
-            oTable.removeSelections(true);
-            this.byId("idDeleteFilesBtn").setEnabled(false);
-
+            );
         },
 
         handleUploadPress() {
