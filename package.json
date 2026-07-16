@@ -29,10 +29,7 @@
         "auth": "xsuaa"
       },
       "db": {
-        "kind": "sqlite",
-        "credentials": {
-          "url": "db.sqlite"
-        }
+        "kind": "hana"
       },
       "KB_AI_CHATBOT": {
         "kind": "odata",
@@ -49,3 +46,4 @@
     "app/*"
   ]
 }
+ 
