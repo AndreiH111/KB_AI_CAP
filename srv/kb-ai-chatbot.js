@@ -29,14 +29,11 @@ class ChatbotService extends cds.ApplicationService {
                 });
 
                 mLogs.info(SUCCESS.REQUEST_RECEIVED);
-                return SUCCESS.REQUEST_RECEIVED;
+                return res.answer;
 
             } catch (error) {
                 mLogs.error(ERROR.REQUEST_ERROR, error);
-                return {
-                    statusCode: STATUS_CODE.SERVER_ERROR,
-                    MESSAGE: ERROR.REQUEST_ERROR
-                };
+                return req.reject(STATUS_CODE.SERVER_ERROR, ERROR.REQUEST_ERROR);
             }
         });
 

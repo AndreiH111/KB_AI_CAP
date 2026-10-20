@@ -244,6 +244,7 @@
                         <FeedInput
                             id="chatFeedInputId"
                             post=".onPost"
+                            enabled="{= !${chat>/busy} }"
                             rows="2"
                             showIcon="false"
                             placeholder="{i18n>chatInputPlaceholder}"
