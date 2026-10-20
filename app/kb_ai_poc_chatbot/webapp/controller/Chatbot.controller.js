@@ -6,7 +6,7 @@ sap.ui.define([
 
     return Controller.extend("com.takeda.kbaipocchatbot.controller.Chatbot", {
         onInit: function () {
-            var oChatModel = new JSONModel({
+            const oChatModel = new JSONModel({
                 selectedChatKey: "incidentTicket",
                 dataSource: "Guide.xlsx",
                 aiModel: "gpt-5.4-mini",
@@ -67,28 +67,27 @@ sap.ui.define([
         },
 
         onChatHistorySelect: function (oEvent) {
-            var oSelectedItem = oEvent.getParameter("listItem");
-            var oContext = oSelectedItem.getBindingContext("chat");
-            var sSelectedKey = oContext.getProperty("key");
-            var oModel = this.getView().getModel("chat");
+            const oSelectedItem = oEvent.getParameter("listItem");
+            const oContext = oSelectedItem.getBindingContext("chat");
+            const sSelectedKey = oContext.getProperty("key");
+            const oModel = this.getView().getModel("chat");
 
             oModel.setProperty("/selectedChatKey", sSelectedKey);
             this._loadSelectedChat();
         },
 
         onPost: function (oEvent) {
-            var sMessage = oEvent.getParameter("value");
-            var oModel = this.getView().getModel("chat");
-            var sSelectedChatKey = oModel.getProperty("/selectedChatKey");
-            var aChatHistory = oModel.getProperty("/chatHistory");
-            var sTime = this._getCurrentTime();
-            var oSelectedChat;
+            const sMessage = oEvent.getParameter("value");
+            const oModel = this.getView().getModel("chat");
+            const sSelectedChatKey = oModel.getProperty("/selectedChatKey");
+            const aChatHistory = oModel.getProperty("/chatHistory");
+            const sTime = this._getCurrentTime();
 
             if (!sMessage || !sMessage.trim()) {
                 return;
             }
 
-            oSelectedChat = aChatHistory.find(function (oChat) {
+            const oSelectedChat = aChatHistory.find(function (oChat) {
                 return oChat.key === sSelectedChatKey;
             });
 
@@ -124,11 +123,11 @@ sap.ui.define([
         },
 
         onNewChat: function () {
-            var oModel = this.getView().getModel("chat");
-            var aChatHistory = oModel.getProperty("/chatHistory");
-            var sKey = "chat" + Date.now();
-            var sTime = this._getCurrentTime();
-            var oNewChat = {
+            const oModel = this.getView().getModel("chat");
+            const aChatHistory = oModel.getProperty("/chatHistory");
+            const sKey = "chat" + Date.now();
+            const sTime = this._getCurrentTime();
+            const oNewChat = {
                 key: sKey,
                 title: "New Chat",
                 description: "Today, " + sTime,
@@ -147,10 +146,10 @@ sap.ui.define([
         },
 
         _loadSelectedChat: function () {
-            var oModel = this.getView().getModel("chat");
-            var sSelectedChatKey = oModel.getProperty("/selectedChatKey");
-            var aChatHistory = oModel.getProperty("/chatHistory");
-            var oSelectedChat = aChatHistory.find(function (oChat) {
+            const oModel = this.getView().getModel("chat");
+            const sSelectedChatKey = oModel.getProperty("/selectedChatKey");
+            const aChatHistory = oModel.getProperty("/chatHistory");
+            const oSelectedChat = aChatHistory.find(function (oChat) {
                 return oChat.key === sSelectedChatKey;
             });
 
@@ -172,7 +171,7 @@ sap.ui.define([
         },
 
         _scrollConversationToBottom: function () {
-            var oScrollContainer = this.byId("conversationScrollContainerId");
+            const oScrollContainer = this.byId("conversationScrollContainerId");
 
             if (oScrollContainer) {
                 oScrollContainer.scrollTo(0, 9999999, 0);
