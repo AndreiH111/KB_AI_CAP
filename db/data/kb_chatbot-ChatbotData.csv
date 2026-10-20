@@ -1,0 +1,11 @@
+ID,chatbotQuestion,chatbotAnswer
+1,"How do I request access to an application?","Open the User Management app, select Applications, and submit an access request. Your line manager receives an approval task."
+2,"What is the Delegation of Authority (DoA) process?","DoA defines who can approve requests and up to which value. Approvals are routed to the authorized approver based on the request type and amount."
+3,"How long does an approval request stay open?","Requests remain open until the approver acts on them. Escalation is triggered automatically after the configured reminder period."
+4,"Who can I contact if my access request is rejected?","Contact the approver listed on the rejection notice. If you need further help, raise a ticket with the application support team."
+5,"Can I withdraw a request after submitting it?","Yes. Open My Requests, select the pending request, and choose Withdraw. Withdrawn requests cannot be reopened and must be resubmitted."
+6,"What is an exception approval?","An exception approval is used when a request falls outside standard DoA limits. It requires review by a higher-level approver before it can be processed."
+7,"How do I onboard an external user?","Use the External Onboarding screen, enter the user's company email and required applications, then submit. The external user receives an invitation link."
+8,"Why can't I see the Approve button?","The Approve button is only visible to users assigned the approver role for that request type. Check your role assignments with your administrator."
+9,"How do I bulk approve multiple requests?","Select the requests in the Mass Approval list and choose Approve. Only requests within your DoA limit can be approved in bulk."
+10,"Where can I find my approval history?","Open the Approval History tab in the DoA app. You can filter by date, status, and request type."
