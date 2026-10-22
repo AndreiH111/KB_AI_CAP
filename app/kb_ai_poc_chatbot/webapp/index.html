@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>App Title</title>
     <style>
-        html, body, body > div, #container, #container-uiarea {
+        html, body, #componentRoot, #container, #container-uiarea {
             height: 100%;
         }
     </style>
@@ -25,6 +25,7 @@
 </head>
 <body class="sapUiBody sapUiSizeCompact" id="content">
     <div
+        id="componentRoot"
         data-sap-ui-component
         data-name="com.takeda.kbaipocchatbot"
         data-id="container"
