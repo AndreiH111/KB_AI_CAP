@@ -12,6 +12,9 @@ sap.ui.define([
                 busy: false,
                 dataSource: "Guide.xlsx",
                 aiModel: "gpt-5.4-mini",
+                dataSources: [],
+                aiModels: ["gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano"],
+                draft: {},
                 title: "",
                 messages: [],
                 chatHistory: []
@@ -130,6 +133,55 @@ sap.ui.define([
                 oModel.setProperty("/busy", false);
                 oModel.refresh(true);
                 this._delayedScrollToBottom();
+            });
+        },
+
+        onEditChatSettings: function () {
+            const oModel = this.getView().getModel("chat");
+
+            oModel.setProperty("/draft", {
+                dataSource: oModel.getProperty("/dataSource"),
+                aiModel: oModel.getProperty("/aiModel")
+            });
+
+            this._pChatSettingsDialog = this._pChatSettingsDialog || this.loadFragment({
+                name: "com.takeda.kbaipocchatbot.view.ChatSettingsDialog"
+            });
+            this._pChatSettingsDialog.then(function (oDialog) {
+                oDialog.open();
+            });
+
+            this._loadDataSources();
+        },
+
+        onSaveChatSettings: function () {
+            const oModel = this.getView().getModel("chat");
+
+            oModel.setProperty("/dataSource", oModel.getProperty("/draft/dataSource"));
+            oModel.setProperty("/aiModel", oModel.getProperty("/draft/aiModel"));
+            this.byId("chatSettingsDialogId").close();
+        },
+
+        onCancelChatSettings: function () {
+            this.byId("chatSettingsDialogId").close();
+        },
+
+        _loadDataSources: function () {
+            const oModel = this.getView().getModel("chat");
+            const oFunction = this.getOwnerComponent().getModel().bindContext("/readFiles(...)");
+
+            oFunction.invoke().then(() => {
+                // readFiles reports backend failures inside value instead of as an HTTP error
+                const aFiles = oFunction.getBoundContext().getObject("value")[0]?.files;
+
+                if (!aFiles) {
+                    throw new Error("readFiles returned no files");
+                }
+
+                oModel.setProperty("/dataSources", aFiles);
+            }).catch(() => {
+                const oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+                MessageBox.error(oBundle.getText("dataSourcesLoadError"));
             });
         },
 

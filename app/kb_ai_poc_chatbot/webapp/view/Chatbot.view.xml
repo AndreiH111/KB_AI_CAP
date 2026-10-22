@@ -141,7 +141,8 @@
                                     <Button
                                         id="editButtonId"
                                         text="{i18n>editButtonText}"
-                                        type="Emphasized"/>
+                                        type="Emphasized"
+                                        press=".onEditChatSettings"/>
 
                                 </HBox>
 
