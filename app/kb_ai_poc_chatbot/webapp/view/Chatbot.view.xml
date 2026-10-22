@@ -23,7 +23,7 @@
                 <VBox
                     id="chatHistoryVBoxId"
                     width="28%"
-                    height="100%"
+                    renderType="Bare"
                     class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd">
 
                     <Button
@@ -40,33 +40,48 @@
                         level="H5"
                         class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
 
-                    <List
-                        id="chatHistoryListId"
-                        mode="SingleSelectMaster"
-                        includeItemInSelection="true"
+                    <!-- SCROLLABLE CHAT HISTORY -->
+                    <ScrollContainer
+                        id="chatHistoryScrollContainerId"
                         width="100%"
-                        selectionChange=".onChatHistorySelect"
-                        items="{
-                            path: 'chat>/chatHistory',
-                            templateShareable: false
-                        }">
+                        vertical="true"
+                        horizontal="false"
+                        focusable="false">
 
-                        <items>
-                            <StandardListItem
-                                id="chatHistoryStandardListItemId"
-                                title="{chat>title}"
-                                description="{chat>description}"
-                                selected="{= ${chat>key} === ${chat>/selectedChatKey} }"/>
-                        </items>
-                    </List>
+                        <layoutData>
+                            <FlexItemData
+                                id="chatHistoryScrollFlexItemDataId"
+                                growFactor="1"
+                                shrinkFactor="1"
+                                baseSize="0"/>
+                        </layoutData>
+
+                        <List
+                            id="chatHistoryListId"
+                            mode="SingleSelectMaster"
+                            includeItemInSelection="true"
+                            width="100%"
+                            selectionChange=".onChatHistorySelect"
+                            items="{
+                                path: 'chat>/chatHistory',
+                                templateShareable: false
+                            }">
+
+                            <items>
+                                <StandardListItem
+                                    id="chatHistoryStandardListItemId"
+                                    title="{chat>title}"
+                                    description="{chat>description}"
+                                    selected="{= ${chat>key} === ${chat>/selectedChatKey} }"/>
+                            </items>
+                        </List>
+                    </ScrollContainer>
                 </VBox>
 
                 <!-- RIGHT MAIN CONTENT -->
                 <VBox
                     id="chatRightPaneVBoxId"
                     width="72%"
-                    height="100%"
-                    fitContainer="true"
                     renderType="Bare"
                     class="sapUiSmallMargin">
 

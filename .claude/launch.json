@@ -5,7 +5,7 @@
       "name": "cap",
       "runtimeExecutable": "node",
       "runtimeArgs": ["node_modules/@sap/cds-dk/bin/cds.js", "serve", "all", "--with-mocks", "--in-memory"],
-      "env": { "CDS_REQUIRES_DB_DRIVER": "better-sqlite3", "destinations": "[{\"name\":\"KB_AI_POC\",\"url\":\"http://localhost:8091\"}]" },
+      "env": { "CDS_REQUIRES_DB_DRIVER": "better-sqlite3" },
       "port": 4004
     },
     {
