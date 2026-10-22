@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cap",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["node_modules/@sap/cds-dk/bin/cds.js", "serve", "all", "--with-mocks", "--in-memory"],
+      "env": { "CDS_REQUIRES_DB_DRIVER": "better-sqlite3" },
+      "port": 4004
+    },
+    {
+      "name": "ui-static",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8090", "--bind", "127.0.0.1", "--directory", "app"],
+      "port": 8090,
+      "autoPort": false
+    }
+  ]
+}
