@@ -38,7 +38,7 @@ builder:
     - name: ui5-task-zipper
       afterTask: generateVersionInfo
       configuration:
-        archiveName: kb_ai_poc
+        archiveName: kb_ai_poc_datasource
         relativePaths: true
         additionalFiles:
           - xs-app.json
