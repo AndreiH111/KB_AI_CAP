@@ -5,7 +5,7 @@
     "serviceType": "None",
     "metadataFilename": "",
     "serviceUrl": "N/A",
-    "appName": "kb_ai_poc",
+    "appName": "kb_ai_poc_datasource",
     "appTitle": "App Title",
     "appDescription": "An SAP Fiori application.",
     "appNamespace": "com.takeda",

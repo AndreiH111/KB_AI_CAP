@@ -8,7 +8,7 @@
 |**Template Used**<br>Basic|
 |**Service Type**<br>None|
 |**Service URL**<br>N/A|
-|**Module Name**<br>kb_ai_poc|
+|**Module Name**<br>kb_ai_poc_datasource|
 |**Application Title**<br>App Title|
 |**Namespace**<br>com.takeda|
 |**UI5 Theme**<br>sap_horizon|
@@ -16,7 +16,7 @@
 |**Enable TypeScript**<br>False|
 |**Add Eslint configuration**<br>True, see https://www.npmjs.com/package/@sap-ux/eslint-plugin-fiori-tools#rules for the eslint rules.|
 
-## kb_ai_poc
+## kb_ai_poc_datasource
 
 An SAP Fiori application.
 
