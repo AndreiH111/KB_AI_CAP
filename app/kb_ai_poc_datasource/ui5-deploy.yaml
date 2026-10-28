@@ -2,7 +2,7 @@
 
 specVersion: "4.0"
 metadata:
-  name: com.takeda.kbaipoc
+  name: com.takeda.kbaipocdatasource
 type: application
 resources:
   configuration:
@@ -16,7 +16,7 @@ builder:
     - name: ui5-task-zipper
       afterTask: generateCachebusterInfo
       configuration:
-        archiveName: comtakedakbaipoc
+        archiveName: comtakedakbaipocdatasource
         relativePaths: true
         additionalFiles:
           - xs-app.json

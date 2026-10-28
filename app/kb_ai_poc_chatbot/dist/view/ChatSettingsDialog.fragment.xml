@@ -1,0 +1,78 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <Dialog
+        id="chatSettingsDialogId"
+        title="{i18n>chatSettingsDialogTitle}"
+        contentWidth="24rem">
+
+        <content>
+            <VBox
+                id="chatSettingsVBoxId"
+                class="sapUiSmallMargin">
+
+                <Label
+                    id="dataSourceSelectLabelId"
+                    text="{i18n>dataSourceLabel}"
+                    labelFor="dataSourceSelectId"/>
+
+                <Select
+                    id="dataSourceSelectId"
+                    width="100%"
+                    forceSelection="false"
+                    selectedKey="{chat>/draft/dataSource}"
+                    items="{
+                        path: 'chat>/dataSources',
+                        templateShareable: false
+                    }"
+                    class="sapUiSmallMarginBottom">
+
+                    <core:Item
+                        id="dataSourceItemId"
+                        key="{chat>filename}"
+                        text="{chat>filename}"/>
+                </Select>
+
+                <Label
+                    id="aiModelSelectLabelId"
+                    text="{i18n>aiModelLabel}"
+                    labelFor="aiModelSelectId"/>
+
+                <Select
+                    id="aiModelSelectId"
+                    width="100%"
+                    forceSelection="false"
+                    selectedKey="{chat>/draft/aiModel}"
+                    items="{
+                        path: 'chat>/aiModels',
+                        templateShareable: false
+                    }">
+
+                    <core:Item
+                        id="aiModelItemId"
+                        key="{chat>}"
+                        text="{chat>}"/>
+                </Select>
+
+            </VBox>
+        </content>
+
+        <beginButton>
+            <Button
+                id="chatSettingsSaveButtonId"
+                text="{i18n>saveButtonText}"
+                type="Emphasized"
+                enabled="{= !!${chat>/draft/dataSource} &amp;&amp; !!${chat>/draft/aiModel} }"
+                press=".onSaveChatSettings"/>
+        </beginButton>
+
+        <endButton>
+            <Button
+                id="chatSettingsCancelButtonId"
+                text="{i18n>cancelButtonText}"
+                press=".onCancelChatSettings"/>
+        </endButton>
+
+    </Dialog>
+</core:FragmentDefinition>

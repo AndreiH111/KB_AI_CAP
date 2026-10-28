@@ -1,65 +1,56 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
-    "sap/ui/model/json/JSONModel"
-], function (Controller, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "sap/m/MessageBox"
+], function (Controller, JSONModel, MessageBox) {
     "use strict";
 
     return Controller.extend("com.takeda.kbaipocchatbot.controller.Chatbot", {
         onInit: function () {
-            var oChatModel = new JSONModel({
-                selectedChatKey: "incidentTicket",
+            const oChatModel = new JSONModel({
+                selectedChatKey: "",
+                busy: false,
                 dataSource: "Guide.xlsx",
                 aiModel: "gpt-5.4-mini",
+                dataSources: [],
+                aiModels: ["gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano"],
+                draft: {},
                 title: "",
                 messages: [],
-                chatHistory: [
-                    {
-                        key: "incidentTicket",
-                        title: "How to log a Incident Ticket",
-                        description: "Today, 10:30 AM",
-                        messages: [
-                            {
-                                role: "user",
-                                timestamp: "10:30 AM",
-                                text: "How to log an Incident ticket in service now what is the step by step process"
-                            },
-                            {
-                                role: "assistant",
-                                timestamp: "10:33 AM",
-                                htmlText: "Based on the Takeda Guide, here are the steps to process an incident request:<br/><br/>" +
-                                    "1. Log the incident - Record the incident in the tracking system with all relevant details<br/>" +
-                                    "2. Categorize and prioritize - Assign appropriate category and priority level based on impact<br/>" +
-                                    "3. Assign to appropriate team - Route to the correct resolver group<br/>" +
-                                    "4. Monitor and resolve - Track progress and ensure resolution within SLA<br/>" +
-                                    "5. Document and close - Update records and close the incident ticket"
-                            }
-                        ]
-                    },
-                    {
-                        key: "dasProcess",
-                        title: "What is DAS Process",
-                        description: "Today, 9:30 PM",
-                        messages: [
-                            {
-                                role: "user",
-                                timestamp: "9:30 PM",
-                                text: "What is DAS Process?"
-                            },
-                            {
-                                role: "assistant",
-                                timestamp: "9:31 PM",
-                                htmlText: "The DAS process was followed to ensure a structured and comprehensive approach to solution design and implementation.<br/><br/>" +
-                                "<b>Define / Design:</b> The requirements were clearly identified and documented, including business needs, system scope, and expected outcomes. Initial design considerations were aligned with existing architecture and standards.<br/><br/>" +
-                                "<b>Analyze:</b> A detailed analysis was conducted to evaluate feasibility, dependencies, and potential risks. This included reviewing current processes, identifying gaps, and assessing the impact of proposed changes on both frontend and backend systems.<br/><br/>" +
-                                "<b>Solution:</b> Based on the analysis, a solution was designed and implemented to address the identified requirements. The approach ensures scalability, maintainability, and alignment with best practices. Necessary validations, error handling, and system integrations were incorporated to ensure a robust implementation."
-                            }
-                        ]
-                    }
-                ]
+                chatHistory: []
             });
 
             this.getView().setModel(oChatModel, "chat");
-            this._loadSelectedChat();
+            this._loadChatHistory();
+        },
+
+        _loadChatHistory: function () {
+            const oModel = this.getView().getModel("chat");
+            const oListBinding = this.getOwnerComponent().getModel().bindList("/ChatbotData", null, null, null, {
+                $select: "ID,chatbotQuestion,chatbotAnswer"
+            });
+
+            oListBinding.requestContexts(0, Infinity).then((aContexts) => {
+                const aChatHistory = aContexts.map((oContext) => {
+                    const oChat = oContext.getObject();
+
+                    return {
+                        key: oChat.ID,
+                        title: oChat.chatbotQuestion,
+                        messages: [
+                            { role: "user", text: oChat.chatbotQuestion },
+                            { role: "assistant", htmlText: oChat.chatbotAnswer }
+                        ]
+                    };
+                });
+
+                oModel.setProperty("/chatHistory", aChatHistory);
+                oModel.setProperty("/selectedChatKey", aChatHistory[0]?.key || "");
+                this._loadSelectedChat();
+            }).catch(() => {
+                const oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+                MessageBox.error(oBundle.getText("chatHistoryLoadError"));
+            });
         },
 
         onAfterRendering: function () {
@@ -67,28 +58,27 @@ sap.ui.define([
         },
 
         onChatHistorySelect: function (oEvent) {
-            var oSelectedItem = oEvent.getParameter("listItem");
-            var oContext = oSelectedItem.getBindingContext("chat");
-            var sSelectedKey = oContext.getProperty("key");
-            var oModel = this.getView().getModel("chat");
+            const oSelectedItem = oEvent.getParameter("listItem");
+            const oContext = oSelectedItem.getBindingContext("chat");
+            const sSelectedKey = oContext.getProperty("key");
+            const oModel = this.getView().getModel("chat");
 
             oModel.setProperty("/selectedChatKey", sSelectedKey);
             this._loadSelectedChat();
         },
 
         onPost: function (oEvent) {
-            var sMessage = oEvent.getParameter("value");
-            var oModel = this.getView().getModel("chat");
-            var sSelectedChatKey = oModel.getProperty("/selectedChatKey");
-            var aChatHistory = oModel.getProperty("/chatHistory");
-            var sTime = this._getCurrentTime();
-            var oSelectedChat;
+            const sMessage = oEvent.getParameter("value");
+            const oModel = this.getView().getModel("chat");
+            const sSelectedChatKey = oModel.getProperty("/selectedChatKey");
+            const aChatHistory = oModel.getProperty("/chatHistory");
+            const sTime = this._getCurrentTime();
 
             if (!sMessage || !sMessage.trim()) {
                 return;
             }
 
-            oSelectedChat = aChatHistory.find(function (oChat) {
+            const oSelectedChat = aChatHistory.find(function (oChat) {
                 return oChat.key === sSelectedChatKey;
             });
 
@@ -102,12 +92,14 @@ sap.ui.define([
                 text: sMessage
             });
 
-            oSelectedChat.messages.push({
+            const oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+            const oAnswer = {
                 role: "assistant",
                 timestamp: sTime,
-                htmlText: "This is a sample AI response for your message.<br/><br/>" +
-                    "Once your backend is ready, this can be replaced by the actual service response."
-            });
+                htmlText: oBundle.getText("assistantThinking")
+            };
+
+            oSelectedChat.messages.push(oAnswer);
 
             oSelectedChat.description = "Today, " + sTime;
 
@@ -121,14 +113,84 @@ sap.ui.define([
 
             this.byId("chatFeedInputId").setValue("");
             this._delayedScrollToBottom();
+            this._askChatbot(sMessage, oAnswer);
+        },
+
+        _askChatbot: function (sQuestion, oAnswer) {
+            const oModel = this.getView().getModel("chat");
+            const oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+            const oAction = this.getOwnerComponent().getModel().bindContext("/askChatbot(...)");
+
+            oModel.setProperty("/busy", true);
+            oAction.setParameter("question", sQuestion);
+
+            oAction.invoke().then(() => {
+                oAnswer.htmlText = oAction.getBoundContext().getProperty("value");
+            }).catch(() => {
+                oAnswer.htmlText = oBundle.getText("assistantError");
+            }).finally(() => {
+                oAnswer.timestamp = this._getCurrentTime();
+                oModel.setProperty("/busy", false);
+                oModel.refresh(true);
+                this._delayedScrollToBottom();
+            });
+        },
+
+        onEditChatSettings: function () {
+            const oModel = this.getView().getModel("chat");
+
+            oModel.setProperty("/draft", {
+                dataSource: oModel.getProperty("/dataSource"),
+                aiModel: oModel.getProperty("/aiModel")
+            });
+
+            this._pChatSettingsDialog = this._pChatSettingsDialog || this.loadFragment({
+                name: "com.takeda.kbaipocchatbot.view.ChatSettingsDialog"
+            });
+            this._pChatSettingsDialog.then(function (oDialog) {
+                oDialog.open();
+            });
+
+            this._loadDataSources();
+        },
+
+        onSaveChatSettings: function () {
+            const oModel = this.getView().getModel("chat");
+
+            oModel.setProperty("/dataSource", oModel.getProperty("/draft/dataSource"));
+            oModel.setProperty("/aiModel", oModel.getProperty("/draft/aiModel"));
+            this.byId("chatSettingsDialogId").close();
+        },
+
+        onCancelChatSettings: function () {
+            this.byId("chatSettingsDialogId").close();
+        },
+
+        _loadDataSources: function () {
+            const oModel = this.getView().getModel("chat");
+            const oFunction = this.getOwnerComponent().getModel().bindContext("/readFiles(...)");
+
+            oFunction.invoke().then(() => {
+                // readFiles reports backend failures inside value instead of as an HTTP error
+                const aFiles = oFunction.getBoundContext().getObject("value")[0]?.files;
+
+                if (!aFiles) {
+                    throw new Error("readFiles returned no files");
+                }
+
+                oModel.setProperty("/dataSources", aFiles);
+            }).catch(() => {
+                const oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+                MessageBox.error(oBundle.getText("dataSourcesLoadError"));
+            });
         },
 
         onNewChat: function () {
-            var oModel = this.getView().getModel("chat");
-            var aChatHistory = oModel.getProperty("/chatHistory");
-            var sKey = "chat" + Date.now();
-            var sTime = this._getCurrentTime();
-            var oNewChat = {
+            const oModel = this.getView().getModel("chat");
+            const aChatHistory = oModel.getProperty("/chatHistory");
+            const sKey = "chat" + Date.now();
+            const sTime = this._getCurrentTime();
+            const oNewChat = {
                 key: sKey,
                 title: "New Chat",
                 description: "Today, " + sTime,
@@ -147,10 +209,10 @@ sap.ui.define([
         },
 
         _loadSelectedChat: function () {
-            var oModel = this.getView().getModel("chat");
-            var sSelectedChatKey = oModel.getProperty("/selectedChatKey");
-            var aChatHistory = oModel.getProperty("/chatHistory");
-            var oSelectedChat = aChatHistory.find(function (oChat) {
+            const oModel = this.getView().getModel("chat");
+            const sSelectedChatKey = oModel.getProperty("/selectedChatKey");
+            const aChatHistory = oModel.getProperty("/chatHistory");
+            const oSelectedChat = aChatHistory.find(function (oChat) {
                 return oChat.key === sSelectedChatKey;
             });
 
@@ -172,7 +234,7 @@ sap.ui.define([
         },
 
         _scrollConversationToBottom: function () {
-            var oScrollContainer = this.byId("conversationScrollContainerId");
+            const oScrollContainer = this.byId("conversationScrollContainerId");
 
             if (oScrollContainer) {
                 oScrollContainer.scrollTo(0, 9999999, 0);
