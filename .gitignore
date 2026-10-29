@@ -1,21 +1,47 @@
+_out
+*.db
+*.sqlite
+connection.properties
+default-*.json
+.cdsrc-private.json
+gen/
 node_modules/
 target/
-_out/
-gen/
 
-.cdsrc-private.json
-default-*.json
-*.sqlite
-test.http
+# Web IDE, App Studio
+.che/
+.gen/
+history/
 
 # MTA
-mta_archives/
 *_mta_build_tmp
 *.mtar
+mta_archives/
 
 # Other
 .DS_Store
-.history/
+*.orig
+*.log
+resources/
+
+*.iml
+*.flattened-pom.xml
+
+# IDEs
+.vscode/settings.json
+# .idea
 
 # @cap-js/cds-typer
 @cds-models
+
+_out
+*.db
+*.sqlite
+connection.properties
+default-*.json
+.cdsrc-private.json
+gen/
+target/
+*.env
+*.http
+.http
