@@ -190,6 +190,7 @@
                                 <CustomListItem id="conversationCustomListItemId">
                                     <Panel
                                         id="conversationMessagePanelId"
+                                        width="auto"
                                         expandable="false"
                                         expanded="true"
                                         class="sapUiNoContentPadding sapUiResponsiveMargin sapUiTinyMarginBottom">
@@ -230,11 +231,13 @@
                                                     text="{chat>text}"
                                                     wrapping="true"/>
 
-                                                <!-- AI MESSAGE -->
-                                                <FormattedText
-                                                    id="assistantMessageFormattedTextId"
+                                                <!-- AI MESSAGE: Markdown rendered as HTML. FormattedText can't show tables;
+                                                     sanitizeContent strips scripts from LLM output -->
+                                                <core:HTML
+                                                    id="assistantMessageHtmlId"
                                                     visible="{= ${chat>role} === 'assistant' }"
-                                                    htmlText="{chat>htmlText}"/>
+                                                    sanitizeContent="true"
+                                                    content="{path: 'chat>htmlText', formatter: '.formatMarkdown'}"/>
 
                                             </VBox>
                                         </content>

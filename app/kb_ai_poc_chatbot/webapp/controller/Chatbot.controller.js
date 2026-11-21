@@ -1,11 +1,17 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
-    "sap/m/MessageBox"
-], function (Controller, JSONModel, MessageBox) {
+    "sap/m/MessageBox",
+    "../model/markdown"
+], function (Controller, JSONModel, MessageBox, markdown) {
     "use strict";
 
     return Controller.extend("com.takeda.kbaipocchatbot.controller.Chatbot", {
+        formatMarkdown: function (sText) {
+            // sap.ui.core.HTML needs a single root node; the view sanitizes the result
+            return "<div class=\"kbMarkdown\">" + markdown.toHtml(sText) + "</div>";
+        },
+
         onInit: function () {
             const oChatModel = new JSONModel({
                 selectedChatKey: "",
