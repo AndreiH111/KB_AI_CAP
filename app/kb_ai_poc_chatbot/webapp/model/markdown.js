@@ -1,15 +1,15 @@
 sap.ui.define([], function () {
     "use strict";
 
-    // Converts the Markdown that LLM answers use into HTML: paragraphs (single newlines become <br>),
-    // headings, nested lists, GFM tables, and inline bold/italic/code/links.
-    // Raw HTML in the input is escaped except <br>; callers still sanitize the result (link URLs).
+    // Splits the Markdown that LLM answers use into blocks for native controls:
+    // { html } for sap.m.FormattedText (paragraphs, headings, nested lists, inline bold/italic/code/links)
+    // and { columns, rows } for sap.m.Table, whose cells hold inline HTML. Raw HTML is escaped except <br>.
 
     const LIST_ITEM = /^(\s*)([-*+]|\d{1,9}[.)])\s+(.*)$/;
     const HEADING = /^\s{0,3}(#{1,6})\s+(.*?)(?:\s+#+)?\s*$/;
     const TABLE_SEPARATOR = /^\s*\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$/;
     const INDENTED = /^\s+\S/;
-    const KEPT = /\uE000(\d+)\uE000/g;
+    const KEPT = /<(\d+)>/g; // escaped text has no raw "<", so <n> placeholders are unambiguous
 
     function escapeHtml(sText) {
         return sText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -24,15 +24,14 @@ sap.ui.define([], function () {
     function inline(sText) {
         // code spans, <br> and links are set aside first so emphasis can't alter their contents
         const aKept = [];
-        const keep = (sHtml) => "\uE000" + (aKept.push(sHtml) - 1) + "\uE000";
+        const keep = (sHtml) => "<" + (aKept.push(sHtml) - 1) + ">";
+        const restore = (sHtml) => sHtml.replace(KEPT, (sMatch, i) => aKept[i]);
 
-        const sHtml = escapeHtml(sText)
+        return restore(emphasis(escapeHtml(sText)
             .replace(/`([^`]+)`/g, (sMatch, sCode) => keep("<code>" + sCode + "</code>"))
             .replace(/&lt;br\s*\/?&gt;/gi, () => keep("<br>"))
-            .replace(/\[([^\]]+)\]\(((?:[^()\s"]|\([^()\s"]*\))+)\)/g, (sMatch, sLabel, sUrl) => keep(
-                "<a href=\"" + sUrl + "\" target=\"_blank\" rel=\"noopener noreferrer\">" + emphasis(sLabel) + "</a>"));
-
-        return emphasis(sHtml).replace(KEPT, (sMatch, i) => aKept[i]);
+            .replace(/\[([^\]]+)\]\(((?:[^()\s"]|\([^()\s"]*\))+)\)/g,
+                (sMatch, sLabel, sUrl) => keep("<a href=\"" + sUrl + "\">" + restore(emphasis(sLabel)) + "</a>"))));
     }
 
     function splitRow(sLine) {
@@ -49,22 +48,20 @@ sap.ui.define([], function () {
         return !sLine.trim() || HEADING.test(sLine) || LIST_ITEM.test(sLine) || isTableStart(aLines, i);
     }
 
-    function table(aLines, iStart, aOut) {
-        const aHeader = splitRow(aLines[iStart]);
-        // rows are padded or cut to the header's column count, as in GFM
-        const row = (aCells, sTag) => "<tr>" + aHeader.map((sHeader, k) =>
-            "<" + sTag + ">" + inline(aCells[k] || "") + "</" + sTag + ">").join("") + "</tr>";
+    function table(aLines, iStart, aBlocks) {
+        const aColumns = splitRow(aLines[iStart]);
+        const aRows = [];
         let i = iStart + 2;
 
-        aOut.push("<table><thead>" + row(aHeader, "th") + "</thead><tbody>");
         for (; i < aLines.length && aLines[i].includes("|") && aLines[i].trim(); i++) {
-            aOut.push(row(splitRow(aLines[i]), "td"));
+            const aCells = splitRow(aLines[i]);
+            aRows.push(aColumns.map((sColumn, k) => inline(aCells[k] || ""))); // padded or cut to the header, as in GFM
         }
-        aOut.push("</tbody></table>");
+        aBlocks.push({ columns: aColumns.map((sColumn) => inline(sColumn)), rows: aRows });
         return i;
     }
 
-    function list(aLines, iStart, aOut) {
+    function list(aLines, iStart, aHtml) {
         const aOpen = []; // lists currently open (indent + tag), innermost last
         let i = iStart;
 
@@ -89,7 +86,7 @@ sap.ui.define([], function () {
                 if (!INDENTED.test(sLine)) {
                     break;
                 }
-                aOut.push("<br>" + inline(sLine.trim())); // continuation of the current item
+                aHtml.push("<br>" + inline(sLine.trim())); // continuation of the current item
                 i++;
                 continue;
             }
@@ -100,30 +97,38 @@ sap.ui.define([], function () {
 
             // close deeper lists, and a same-level list of the other type
             while (oTop && (iIndent < oTop.indent || (iIndent === oTop.indent && sTag !== oTop.tag))) {
-                aOut.push("</li></" + aOpen.pop().tag + ">");
+                aHtml.push("</li></" + aOpen.pop().tag + ">");
                 oTop = aOpen[aOpen.length - 1];
             }
             if (oTop && iIndent === oTop.indent) {
-                aOut.push("</li>");
+                aHtml.push("</li>");
             } else {
-                aOut.push(sTag === "ol" ? "<ol start=\"" + parseInt(aItem[2], 10) + "\">" : "<ul>");
+                aHtml.push("<" + sTag + ">");
                 aOpen.push({ indent: iIndent, tag: sTag });
             }
-            aOut.push("<li>" + inline(aItem[3]));
+            aHtml.push("<li>" + inline(aItem[3]));
             i++;
         }
 
         while (aOpen.length) {
-            aOut.push("</li></" + aOpen.pop().tag + ">");
+            aHtml.push("</li></" + aOpen.pop().tag + ">");
         }
         return i;
     }
 
     return {
-        toHtml: function (sMarkdown) {
+        toBlocks: function (sMarkdown) {
             const aLines = String(sMarkdown || "").replace(/\r\n?/g, "\n").split("\n");
-            const aOut = [];
+            const aBlocks = [];
+            let aHtml = []; // text since the last table, emitted as one FormattedText block
             let i = 0;
+
+            const flush = () => {
+                if (aHtml.length) {
+                    aBlocks.push({ html: aHtml.join("") });
+                    aHtml = [];
+                }
+            };
 
             while (i < aLines.length) {
                 const sLine = aLines[i];
@@ -133,22 +138,24 @@ sap.ui.define([], function () {
                     i++;
                 } else if (aHeading) {
                     const iLevel = aHeading[1].length;
-                    aOut.push("<h" + iLevel + ">" + inline(aHeading[2]) + "</h" + iLevel + ">");
+                    aHtml.push("<h" + iLevel + ">" + inline(aHeading[2]) + "</h" + iLevel + ">");
                     i++;
                 } else if (isTableStart(aLines, i)) {
-                    i = table(aLines, i, aOut);
+                    flush();
+                    i = table(aLines, i, aBlocks);
                 } else if (LIST_ITEM.test(sLine)) {
-                    i = list(aLines, i, aOut);
+                    i = list(aLines, i, aHtml);
                 } else {
                     const aParagraph = [];
                     do {
                         aParagraph.push(inline(aLines[i].trim()));
                         i++;
                     } while (i < aLines.length && !startsBlock(aLines, i));
-                    aOut.push("<p>" + aParagraph.join("<br>") + "</p>");
+                    aHtml.push("<p>" + aParagraph.join("<br>") + "</p>");
                 }
             }
-            return aOut.join("");
+            flush();
+            return aBlocks;
         }
     };
 });

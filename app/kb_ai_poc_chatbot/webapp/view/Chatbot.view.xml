@@ -231,13 +231,11 @@
                                                     text="{chat>text}"
                                                     wrapping="true"/>
 
-                                                <!-- AI MESSAGE: Markdown rendered as HTML. FormattedText can't show tables;
-                                                     sanitizeContent strips scripts from LLM output -->
-                                                <core:HTML
-                                                    id="assistantMessageHtmlId"
+                                                <!-- AI MESSAGE: Markdown split into FormattedText and Table blocks -->
+                                                <VBox
+                                                    id="assistantMessageVBoxId"
                                                     visible="{= ${chat>role} === 'assistant' }"
-                                                    sanitizeContent="true"
-                                                    content="{path: 'chat>htmlText', formatter: '.formatMarkdown'}"/>
+                                                    items="{path: 'chat>blocks', factory: '.createAnswerBlock'}"/>
 
                                             </VBox>
                                         </content>

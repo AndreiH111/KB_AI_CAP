@@ -2,14 +2,35 @@ sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageBox",
+    "sap/m/FormattedText",
+    "sap/m/Table",
+    "sap/m/Column",
+    "sap/m/ColumnListItem",
     "../model/markdown"
-], function (Controller, JSONModel, MessageBox, markdown) {
+], function (Controller, JSONModel, MessageBox, FormattedText, Table, Column, ColumnListItem, markdown) {
     "use strict";
 
     return Controller.extend("com.takeda.kbaipocchatbot.controller.Chatbot", {
-        formatMarkdown: function (sText) {
-            // sap.ui.core.HTML needs a single root node; the view sanitizes the result
-            return "<div class=\"kbMarkdown\">" + markdown.toHtml(sText) + "</div>";
+        // Factory for the blocks of an AI answer (see model/markdown): formatted text or a table
+        createAnswerBlock: function (sId, oContext) {
+            if (!oContext.getProperty("rows")) {
+                return new FormattedText(sId, { htmlText: "{chat>html}" });
+            }
+
+            return new Table(sId, {
+                fixedLayout: false,
+                columns: {
+                    path: "chat>columns",
+                    templateShareable: false,
+                    template: new Column({ header: new FormattedText({ htmlText: "{chat>}" }) })
+                },
+                items: {
+                    path: "chat>rows",
+                    factory: (sRowId, oRowContext) => new ColumnListItem(sRowId, {
+                        cells: oRowContext.getObject().map((sCell, i) => new FormattedText({ htmlText: "{chat>" + i + "}" }))
+                    })
+                }
+            });
         },
 
         onInit: function () {
@@ -45,7 +66,7 @@ sap.ui.define([
                         title: oChat.chatbotQuestion,
                         messages: [
                             { role: "user", text: oChat.chatbotQuestion },
-                            { role: "assistant", htmlText: oChat.chatbotAnswer }
+                            { role: "assistant", blocks: markdown.toBlocks(oChat.chatbotAnswer) }
                         ]
                     };
                 });
@@ -102,7 +123,7 @@ sap.ui.define([
             const oAnswer = {
                 role: "assistant",
                 timestamp: sTime,
-                htmlText: oBundle.getText("assistantThinking")
+                blocks: markdown.toBlocks(oBundle.getText("assistantThinking"))
             };
 
             oSelectedChat.messages.push(oAnswer);
@@ -131,9 +152,9 @@ sap.ui.define([
             oAction.setParameter("question", sQuestion);
 
             oAction.invoke().then(() => {
-                oAnswer.htmlText = oAction.getBoundContext().getProperty("value");
+                oAnswer.blocks = markdown.toBlocks(oAction.getBoundContext().getProperty("value"));
             }).catch(() => {
-                oAnswer.htmlText = oBundle.getText("assistantError");
+                oAnswer.blocks = markdown.toBlocks(oBundle.getText("assistantError"));
             }).finally(() => {
                 oAnswer.timestamp = this._getCurrentTime();
                 oModel.setProperty("/busy", false);
