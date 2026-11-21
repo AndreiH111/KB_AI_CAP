@@ -37,6 +37,7 @@ sap.ui.define([
             const oChatModel = new JSONModel({
                 selectedChatKey: "",
                 busy: false,
+                sidebarExpanded: true,
                 dataSource: "Guide.xlsx",
                 aiModel: "gpt-5.4-mini",
                 dataSources: [],
@@ -82,6 +83,12 @@ sap.ui.define([
 
         onAfterRendering: function () {
             this._scrollConversationToBottom();
+        },
+
+        onToggleChatHistory: function () {
+            const oModel = this.getView().getModel("chat");
+
+            oModel.setProperty("/sidebarExpanded", !oModel.getProperty("/sidebarExpanded"));
         },
 
         onChatHistorySelect: function (oEvent) {
