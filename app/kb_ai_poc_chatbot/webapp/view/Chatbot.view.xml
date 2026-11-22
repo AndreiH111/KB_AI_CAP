@@ -23,6 +23,7 @@
                 <VBox
                     id="chatHistoryVBoxId"
                     width="28%"
+                    visible="{chat>/sidebarExpanded}"
                     renderType="Bare"
                     class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd">
 
@@ -85,6 +86,13 @@
                     renderType="Bare"
                     class="sapUiSmallMargin">
 
+                    <!-- fills the width freed when the chat history is collapsed -->
+                    <layoutData>
+                        <FlexItemData
+                            id="chatRightPaneFlexItemDataId"
+                            growFactor="1"/>
+                    </layoutData>
+
                     <!-- FIXED HEADER -->
                     <Panel
                         id="chatHeaderPanelId"
@@ -97,11 +105,26 @@
                                 id="chatHeaderVBoxId"
                                 class="sapUiSmallMargin">
 
-                                <Title
-                                    id="chatTitleId"
-                                    text="{chat>/title}"
-                                    level="H2"
-                                    class="sapUiTinyMarginBottom"/>
+                                <HBox
+                                    id="chatTitleHBoxId"
+                                    alignItems="Center"
+                                    renderType="Bare"
+                                    class="sapUiTinyMarginBottom">
+
+                                    <Button
+                                        id="toggleChatHistoryButtonId"
+                                        icon="sap-icon://menu2"
+                                        type="Transparent"
+                                        tooltip="{i18n>toggleChatHistoryTooltip}"
+                                        press=".onToggleChatHistory"
+                                        class="sapUiTinyMarginEnd"/>
+
+                                    <Title
+                                        id="chatTitleId"
+                                        text="{chat>/title}"
+                                        level="H2"/>
+
+                                </HBox>
 
                                 <HBox
                                     id="chatHeaderContentActionsHBoxId"
@@ -190,6 +213,7 @@
                                 <CustomListItem id="conversationCustomListItemId">
                                     <Panel
                                         id="conversationMessagePanelId"
+                                        width="auto"
                                         expandable="false"
                                         expanded="true"
                                         class="sapUiNoContentPadding sapUiResponsiveMargin sapUiTinyMarginBottom">
@@ -230,11 +254,11 @@
                                                     text="{chat>text}"
                                                     wrapping="true"/>
 
-                                                <!-- AI MESSAGE -->
-                                                <FormattedText
-                                                    id="assistantMessageFormattedTextId"
+                                                <!-- AI MESSAGE: Markdown split into FormattedText and Table blocks -->
+                                                <VBox
+                                                    id="assistantMessageVBoxId"
                                                     visible="{= ${chat>role} === 'assistant' }"
-                                                    htmlText="{chat>htmlText}"/>
+                                                    items="{path: 'chat>blocks', factory: '.createAnswerBlock'}"/>
 
                                             </VBox>
                                         </content>
