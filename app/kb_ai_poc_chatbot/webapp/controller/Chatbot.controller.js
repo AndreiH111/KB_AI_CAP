@@ -55,22 +55,24 @@ sap.ui.define([
         _loadChatHistory: function () {
             const oModel = this.getView().getModel("chat");
             const oListBinding = this.getOwnerComponent().getModel().bindList("/ChatbotData", null, null, null, {
-                $select: "ID,chatbotQuestion,chatbotAnswer"
+                $select: "ID,sessionId,chatbotQuestion,chatbotAnswer"
             });
 
             oListBinding.requestContexts(0, Infinity).then((aContexts) => {
-                const aChatHistory = aContexts.map((oContext) => {
-                    const oChat = oContext.getObject();
+                const mChats = {};
 
-                    return {
-                        key: oChat.ID,
-                        title: oChat.chatbotQuestion,
-                        messages: [
-                            { role: "user", text: oChat.chatbotQuestion },
-                            { role: "assistant", blocks: markdown.toBlocks(oChat.chatbotAnswer) }
-                        ]
-                    };
+                // Rows are turns ordered by creation; group them into one chat per session.
+                aContexts.forEach((oContext) => {
+                    const oRow = oContext.getObject();
+                    const sKey = oRow.sessionId || oRow.ID;
+
+                    mChats[sKey] = mChats[sKey] || { key: sKey, title: oRow.chatbotQuestion, messages: [] };
+                    mChats[sKey].messages.push(
+                        { role: "user", text: oRow.chatbotQuestion },
+                        { role: "assistant", blocks: markdown.toBlocks(oRow.chatbotAnswer) }
+                    );
                 });
+                const aChatHistory = Object.values(mChats);
 
                 oModel.setProperty("/chatHistory", aChatHistory);
                 oModel.setProperty("/selectedChatKey", aChatHistory[0]?.key || "");
@@ -147,16 +149,17 @@ sap.ui.define([
 
             this.byId("chatFeedInputId").setValue("");
             this._delayedScrollToBottom();
-            this._askChatbot(sMessage, oAnswer);
+            this._askChatbot(sMessage, oAnswer, oSelectedChat.key);
         },
 
-        _askChatbot: function (sQuestion, oAnswer) {
+        _askChatbot: function (sQuestion, oAnswer, sSessionId) {
             const oModel = this.getView().getModel("chat");
             const oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
             const oAction = this.getOwnerComponent().getModel().bindContext("/askChatbot(...)");
 
             oModel.setProperty("/busy", true);
             oAction.setParameter("question", sQuestion);
+            oAction.setParameter("sessionId", sSessionId);
 
             oAction.invoke().then(() => {
                 oAnswer.blocks = markdown.toBlocks(oAction.getBoundContext().getProperty("value"));
@@ -222,7 +225,7 @@ sap.ui.define([
         onNewChat: function () {
             const oModel = this.getView().getModel("chat");
             const aChatHistory = oModel.getProperty("/chatHistory");
-            const sKey = "chat" + Date.now();
+            const sKey = crypto.randomUUID();
             const sTime = this._getCurrentTime();
             const oNewChat = {
                 key: sKey,

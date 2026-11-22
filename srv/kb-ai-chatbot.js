@@ -11,19 +11,29 @@ class ChatbotService extends cds.ApplicationService {
 
         this.on('askChatbot', async (req) => {
             const reqAction = '/ai/chat';
-            const userQuestion = req.data.question;
+            const { question: userQuestion, sessionId } = req.data;
 
             try {
                 mLogs.info(INFO.SEND_REQUEST);
 
+                // Send this chat's earlier turns so the API keeps context even after it restarts.
+                // Rows saved before sessionId existed are one-turn chats keyed by their ID.
+                const history = sessionId ? await SELECT.from(ChatbotData)
+                    .columns('chatbotQuestion as question', 'chatbotAnswer as answer')
+                    .where`sessionId = ${sessionId} or ID = ${sessionId}`
+                    .orderBy('createdAt') : [];
+
                 const payload = {
-                    question: userQuestion
+                    question: userQuestion,
+                    session_id: sessionId,
+                    history
                 };
 
                 const res = await executePOSTDestination(reqAction, payload);
 
                 await INSERT.into(ChatbotData).entries({
-                    ID: res.session_id,
+                    ID: cds.utils.uuid(),
+                    sessionId: res.session_id,
                     chatbotQuestion: userQuestion,
                     chatbotAnswer: res.answer
                 });
@@ -39,7 +49,7 @@ class ChatbotService extends cds.ApplicationService {
 
         this.on('READ', ChatbotData, async () => {
             try {
-                const data = await SELECT.from(ChatbotData);
+                const data = await SELECT.from(ChatbotData).orderBy('createdAt');
                 return data;
             } catch (error) {
                 mLogs.error(ERROR.READ_ERROR, error);
