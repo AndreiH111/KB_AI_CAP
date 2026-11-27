@@ -11,7 +11,7 @@ class ChatbotService extends cds.ApplicationService {
 
         this.on('askChatbot', async (req) => {
             const reqAction = '/ai/chat';
-            const { question: userQuestion, sessionId } = req.data;
+            const { question: userQuestion, sessionId, fileName } = req.data;
 
             try {
                 mLogs.info(INFO.SEND_REQUEST);
@@ -29,17 +29,25 @@ class ChatbotService extends cds.ApplicationService {
                     history
                 };
 
+                // The API rejects an empty filename; leaving it out searches all files.
+                if (fileName) {
+                    payload.filename = fileName;
+                }
+
                 const res = await executePOSTDestination(reqAction, payload);
+                // Older API versions send no sources and may send tools_used: null.
+                const sources = res.sources || [];
 
                 await INSERT.into(ChatbotData).entries({
                     ID: cds.utils.uuid(),
                     sessionId: res.session_id,
                     chatbotQuestion: userQuestion,
-                    chatbotAnswer: res.answer
+                    chatbotAnswer: res.answer,
+                    sources: JSON.stringify(sources)
                 });
 
                 mLogs.info(SUCCESS.REQUEST_RECEIVED);
-                return res.answer;
+                return { answer: res.answer, sources, toolsUsed: res.tools_used || [] };
 
             } catch (error) {
                 mLogs.error(ERROR.REQUEST_ERROR, error);

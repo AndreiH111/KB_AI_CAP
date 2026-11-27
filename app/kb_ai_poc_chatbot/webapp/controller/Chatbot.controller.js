@@ -33,12 +33,26 @@ sap.ui.define([
             });
         },
 
+        // Formatters for the lines under an AI answer: the sources it cites and the tools the agent used
+        formatSources: function (aSources) {
+            return aSources?.map((oSource) => "[" + oSource.n + "] " + oSource.locator).join("\n");
+        },
+
+        formatToolsUsed: function (aToolsUsed) {
+            const oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+            // all jira_* tools share one label; a tool without a label shows its raw name
+            const aLabels = (aToolsUsed || []).map((sTool) =>
+                oBundle.getText("tool_" + (sTool.startsWith("jira_") ? "jira" : sTool), undefined, true) || sTool);
+
+            return oBundle.getText("toolsUsedText", [[...new Set(aLabels)].join(", ")]);
+        },
+
         onInit: function () {
             const oChatModel = new JSONModel({
                 selectedChatKey: "",
                 busy: false,
                 sidebarExpanded: true,
-                dataSource: "Guide.xlsx",
+                dataSource: "", // "" searches all files; a filename pins answers to that file
                 aiModel: "gpt-5.4-mini",
                 dataSources: [],
                 aiModels: ["gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano"],
@@ -55,7 +69,7 @@ sap.ui.define([
         _loadChatHistory: function () {
             const oModel = this.getView().getModel("chat");
             const oListBinding = this.getOwnerComponent().getModel().bindList("/ChatbotData", null, null, null, {
-                $select: "ID,sessionId,chatbotQuestion,chatbotAnswer"
+                $select: "ID,sessionId,chatbotQuestion,chatbotAnswer,sources"
             });
 
             oListBinding.requestContexts(0, Infinity).then((aContexts) => {
@@ -65,11 +79,19 @@ sap.ui.define([
                 aContexts.forEach((oContext) => {
                     const oRow = oContext.getObject();
                     const sKey = oRow.sessionId || oRow.ID;
+                    let aSources;
+
+                    // ChatbotData is writable over OData: a malformed row loses its sources, not the whole history
+                    try {
+                        aSources = JSON.parse(oRow.sources);
+                    } catch {
+                        aSources = [];
+                    }
 
                     mChats[sKey] = mChats[sKey] || { key: sKey, title: oRow.chatbotQuestion, messages: [] };
                     mChats[sKey].messages.push(
                         { role: "user", text: oRow.chatbotQuestion },
-                        { role: "assistant", blocks: markdown.toBlocks(oRow.chatbotAnswer) }
+                        { role: "assistant", blocks: markdown.toBlocks(oRow.chatbotAnswer), sources: Array.isArray(aSources) ? aSources : [] }
                     );
                 });
                 const aChatHistory = Object.values(mChats);
@@ -160,9 +182,14 @@ sap.ui.define([
             oModel.setProperty("/busy", true);
             oAction.setParameter("question", sQuestion);
             oAction.setParameter("sessionId", sSessionId);
+            oAction.setParameter("fileName", oModel.getProperty("/dataSource"));
 
             oAction.invoke().then(() => {
-                oAnswer.blocks = markdown.toBlocks(oAction.getBoundContext().getProperty("value"));
+                const oResult = oAction.getBoundContext().getObject();
+
+                oAnswer.blocks = markdown.toBlocks(oResult.answer);
+                oAnswer.sources = oResult.sources;
+                oAnswer.toolsUsed = oResult.toolsUsed;
             }).catch(() => {
                 oAnswer.blocks = markdown.toBlocks(oBundle.getText("assistantError"));
             }).finally(() => {
@@ -215,7 +242,7 @@ sap.ui.define([
                     throw new Error("readFiles returned no files");
                 }
 
-                oModel.setProperty("/dataSources", aFiles);
+                oModel.setProperty("/dataSources", [{ filename: "" }, ...aFiles]); // "" is the "All files" choice
             }).catch(() => {
                 const oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
                 MessageBox.error(oBundle.getText("dataSourcesLoadError"));
