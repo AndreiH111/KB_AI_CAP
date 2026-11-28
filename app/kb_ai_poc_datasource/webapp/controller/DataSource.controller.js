@@ -2,9 +2,19 @@ sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageToast",
-    "sap/m/MessageBox"
-], (Controller, JSONModel, MessageToast, MessageBox) => {
+    "sap/m/MessageBox",
+    "sap/m/ObjectStatus",
+    "sap/ui/model/type/DateTime"
+], (Controller, JSONModel, MessageToast, MessageBox, ObjectStatus, DateTime) => {
     "use strict";
+
+    // Backend index job status → status text and ObjectStatus state
+    const STATUS = {
+        queued: ["dataSource.status.processing", "Warning"],
+        running: ["dataSource.status.processing", "Warning"],
+        complete: ["dataSource.status.uploaded", "Success"],
+        failed: ["dataSource.status.failed", "Error"]
+    };
 
     return Controller.extend("com.takeda.kbaipoc.controller.DataSource", {
         onInit() {
@@ -24,11 +34,15 @@ sap.ui.define([
             return new sap.m.ColumnListItem({
                 cells: [
                     new sap.m.Text({ text: "{files>fileName}" }),
-                    new sap.m.Text({ text: "{files>uploadedOn}" }),
+                    new sap.m.Text({ text: { path: "files>uploadedOn", type: new DateTime({ style: "medium" }) } }),
                     new sap.m.Text({ text: "{files>uploadedBy}" }),
-                    new sap.m.Text({ text: "{files>status}" })
+                    new ObjectStatus({ text: "{files>statusText}", state: "{files>statusState}" })
                 ]
             });
+        },
+
+        onExit() {
+            clearTimeout(this._iStatusTimer);
         },
 
         _loadFiles() {
@@ -36,15 +50,28 @@ sap.ui.define([
             .then((oResponse) => oResponse.json())
             .then((oData) => {
                 const aRawFiles = oData.value?.[0]?.files || [];
-                
-                const aFiles = aRawFiles.map((oFile) => ({
-                            fileName: oFile.filename || "",
-                            uploadedOn: oFile.uploaded_at || "",
-                            uploadedBy: oFile.uploaded_by || "",
-                            status: ""
-                        }));
-                
+                const oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+
+                const aFiles = aRawFiles.map((oFile) => {
+                    const [sStatusKey, sStatusState] = STATUS[oFile.status] || STATUS.complete;
+
+                    return {
+                        fileName: oFile.filename || "",
+                        // a Date, so the DateTime type shows it in the user's timezone
+                        uploadedOn: oFile.uploaded_at ? new Date(oFile.uploaded_at) : null,
+                        uploadedBy: oFile.uploaded_by || "anonymous@email.com",
+                        statusText: oBundle.getText(sStatusKey),
+                        statusState: sStatusState
+                    };
+                });
+
                 this.getView().getModel("files").setProperty("/files", aFiles);
+
+                // Re-check while files are still being indexed so their status updates without a reload
+                clearTimeout(this._iStatusTimer);
+                if (aRawFiles.some((oFile) => ["queued", "running"].includes(oFile.status))) {
+                    this._iStatusTimer = setTimeout(() => this._loadFiles(), 5000);
+                }
             })
             .catch((oError) => {
                 console.error("Error loading files:", oError);
@@ -60,6 +87,10 @@ sap.ui.define([
         onUpdateFinished(oEvent) {
             const iCount = oEvent.getSource().getItems().length;
             this._updateTableTitle(iCount);
+        },
+
+        onRefreshFiles() {
+            this._loadFiles();
         },
 
         onSelectionChange(oEvent) {
