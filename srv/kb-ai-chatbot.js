@@ -83,6 +83,7 @@ class ChatbotService extends cds.ApplicationService {
                     new Blob([buffer]),
                     fileName
                 );
+                payload.append('uploaded_by', req.user.attr?.email || '');
 
                 const res = await executePOSTDestination(reqAction, payload);
                 
@@ -106,8 +107,15 @@ class ChatbotService extends cds.ApplicationService {
             const reqAction = '/ai/files';
 
             try {
-                const res = await executeGETDestination(reqAction);
-                
+                // Index jobs (newest first, kept in memory until the API restarts) tell whether a file is still processing
+                const [res, jobs] = await Promise.all([
+                    executeGETDestination(reqAction),
+                    executeGETDestination('/ai/jobs').then((data) => data.jobs, () => []) // the file list must not depend on jobs
+                ]);
+                const latestStatus = {};
+                for (const job of jobs) if (job.filename) latestStatus[job.filename] ??= job.status;
+                for (const file of res.files) file.status = latestStatus[file.filename] ?? 'complete';
+
                 return res;
             } catch (error) {
                 mLogs.error(ERROR.READ_ERROR, error);

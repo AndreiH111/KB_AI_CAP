@@ -27,9 +27,14 @@
                             <u:FileUploader
                                 id="fileUploader"
                                 name="myFileUpload"
+                                width="100%"
                                 tooltip="{i18n>dataSource.uploadTooltip}"
                                 sameFilenameAllowed="false"
-                                class="sapUiSmallMarginEnd"/>
+                                class="sapUiSmallMarginEnd">
+                                <u:layoutData>
+                                    <FlexItemData id="fileUploaderFlexItemDataId" growFactor="1" maxWidth="40rem"/>
+                                </u:layoutData>
+                            </u:FileUploader>
 
                             <Button
                                 id="uploadButtonId"
@@ -47,6 +52,11 @@
                 <OverflowToolbar id="idDataSourceOverflowToolbar" style="Clear">
                     <Title id="idDataSourceTableTitle" text="{i18n>dataSource.tableTitle}" />
                     <ToolbarSpacer id="idToolbarSpacer"/>
+                    <Button
+                        id="idRefreshFilesBtn"
+                        icon="sap-icon://refresh"
+                        tooltip="{i18n>dataSource.table.refresh}"
+                        press=".onRefreshFiles"/>
                     <Button
                         id="idDeleteFilesBtn"
                         text="{i18n>dataSource.table.deleteFiles}"
