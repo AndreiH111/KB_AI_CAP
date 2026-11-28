@@ -2,7 +2,14 @@ using {kb_chatbot as kb} from '../db/kb_chatbot';
 
 service ChatbotService @(path: 'kb-ai-chatbot') {
 
-    action askChatbot(question: String, sessionId: String) returns String;
+    type ChatbotAnswer {
+        answer: LargeString;
+        sources: many { n: Integer; locator: String; }; // the answer's [n] citations
+        toolsUsed: many String;
+    }
+
+    // fileName pins retrieval to one file; empty searches all files
+    action askChatbot(question: String, sessionId: String, fileName: String) returns ChatbotAnswer;
 
     entity ChatbotData as projection on kb.ChatbotData;
 

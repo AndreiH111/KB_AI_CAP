@@ -17,10 +17,10 @@
                     text="{i18n>dataSourceLabel}"
                     labelFor="dataSourceSelectId"/>
 
+                <!-- keeps the default forceSelection so the "" key selects "All files" -->
                 <Select
                     id="dataSourceSelectId"
                     width="100%"
-                    forceSelection="false"
                     selectedKey="{chat>/draft/dataSource}"
                     items="{
                         path: 'chat>/dataSources',
@@ -31,7 +31,7 @@
                     <core:Item
                         id="dataSourceItemId"
                         key="{chat>filename}"
-                        text="{chat>filename}"/>
+                        text="{= ${chat>filename} || ${i18n>allDataSources} }"/>
                 </Select>
 
                 <Label
@@ -63,7 +63,7 @@
                 id="chatSettingsSaveButtonId"
                 text="{i18n>saveButtonText}"
                 type="Emphasized"
-                enabled="{= !!${chat>/draft/dataSource} &amp;&amp; !!${chat>/draft/aiModel} }"
+                enabled="{= !!${chat>/draft/aiModel} }"
                 press=".onSaveChatSettings"/>
         </beginButton>
 
